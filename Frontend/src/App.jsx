@@ -8,6 +8,10 @@ import getCurrentUser from './customHooks/getCurrentUser.js'
 import { useSelector } from 'react-redux'
 import Profile from './pages/Profile.jsx'
 import ForgetPassword from './pages/ForgetPassword.jsx'
+import EditProfile from './pages/EditProfile.jsx'
+import Dashboard from './pages/Educator/Dashboard.jsx'
+import Courses from './pages/Educator/Courses.jsx'
+import CreateCourses from './pages/Educator/CreateCourses.jsx'
 
 export const serverUrl="http://localhost:8000"
 
@@ -23,6 +27,10 @@ function App() {
         <Route path='/login' element={<Login/>}  />
         <Route path='/profile' element={userData ? <Profile/> : <Navigate to={"/signup"}/>}  />
         <Route path='/forget' element={userData ? <ForgetPassword/> : <Navigate to={"/signup"}/>}  />
+        <Route path='/editprofile' element={userData ? <EditProfile/> : <Navigate to={"/signup"}/>}  />
+        <Route path='/dashboard' element={userData?.role==="educator" ? <Dashboard/> : <Navigate to={"/signup"}/>}  />
+        <Route path='/courses' element={userData?.role==="educator" ? <Courses/> : <Navigate to={"/signup"}/>}  />
+        <Route path='/createcourse' element={userData?.role==="educator" ? <CreateCourses/> : <Navigate to={"/signup"}/>}  />
       </Routes>
     </>
   )
