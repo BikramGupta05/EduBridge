@@ -127,7 +127,7 @@ function EditCourse() {
 
                 <h2 className='text-2xl font-semibold md:pl-[60px]'>Add Detail Information regarding the Course</h2>
                 <div className='space-x-2 space-y-2'>
-                    <button className='bg-black text-white px-4 py-2 rounded-md'>Go to Lecture page</button>
+                    <button className='bg-black text-white px-4 py-2 rounded-md' onClick={()=>navigate(`/createlecture/${selectCourse?._id}`)}>Go to Lecture page</button>
                 </div>    
         </div>
 
@@ -178,7 +178,6 @@ function EditCourse() {
                     <div className='flex-1'>
                         <label htmlFor="" className='block text-sm font-medium text-gray-700 mb-1'>Course Level</label>
                         <select name="" id="" className='w-full border px-4 py-2 rounded-md bg-white' onChange={(e)=>setLevel(e.target.value)} value={level}>
-                            <option value="">Select Level</option>
                             <option value="Beginner">Beginner</option>
                             <option value="Intermediate">Intermediate</option>
                             <option value="Advanced">Advanced</option>
