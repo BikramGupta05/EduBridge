@@ -7,14 +7,23 @@ import img from "../assets/empty.jpg"
 import { FaStar } from "react-icons/fa";
 import { FaPlayCircle } from "react-icons/fa";
 import { FaLock } from "react-icons/fa";
+import axios from 'axios';
+import { serverUrl } from '../App';
+import Card from '../component/Card';
+import { toast } from 'react-toastify';
 
 function ViewCourse() {
   const navigate=useNavigate()
   const {courseId}=useParams()
   const {courseData}=useSelector(state=>state.course)
   const {selectedCourse}=useSelector(state=>state.course)
+  const {userData}=useSelector(state=>state.user)
   const dispatch=useDispatch()
   const [selectedLecture,setSelectedLecture]=useState(null)
+  const [creatorData,setCreatorData]=useState(null)
+  const [creatorCourses,setCreatorCourses]=useState(null)
+  const [isEnrolled,setIsEnrolled]=useState(false)
+
 
   const fetchCourseData=async () => {
     courseData.map((course)=>{
@@ -28,8 +37,78 @@ function ViewCourse() {
   }
 
   useEffect(()=>{
+    
+    const handleCreator=async () => {
+      if(selectedCourse?.creator){
+        try {
+          const result= await axios.post(serverUrl+"/api/course/creator",{userId:selectedCourse?.creator},{withCredentials:true})
+          console.log(result.data)
+          setCreatorData(result.data)
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    }
+    handleCreator()
+  },[selectedCourse])
+
+
+  const checkEnrollement=()=>{
+    const verify=userData?.enrolledCourses?.some(c=>(typeof c==='string' ? c : c._id).toString()===courseId?.toString())
+    if(verify){
+      setIsEnrolled(true)
+    }
+  }
+
+  useEffect(()=>{
     fetchCourseData()
-  },[courseData,courseId])
+    checkEnrollement()
+  },[courseData,courseId,userData])
+
+  useEffect(()=>{
+    if(creatorData?._id && courseData.length>0){
+      const creatorCourse=courseData.filter((course)=> course.creator === creatorData?._id && course._id !==courseId)
+      setCreatorCourses(creatorCourse)
+    }
+  },[creatorData,courseData])
+
+  const handleEnroll =async (userId,courseId) => {
+    try {
+      const orderData= await axios.post(serverUrl+"/api/order/razorpay-order",{userId,courseId},{withCredentials:true})
+      console.log(orderData)
+      const options={
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.data.amount,
+        currency:'INR',
+        name: "VIRTUAL COURSES",
+        description:"COURSE ENROLLEMENT PAYMENT",
+        order_id:orderData.data.id,
+        handler:async function (response) {
+          console.log("RazorPay Response",response)
+
+          try {
+            const verifyPayment= await axios.post(serverUrl+"/api/order/verifypayment",{
+              ...response,
+              courseId,
+              userId
+            },{withCredentials:true})
+            setIsEnrolled(true)
+            toast.success(verifyPayment.data.message)
+          } catch (error) {
+            toast.error(error.response.data.message)
+          }
+        }
+        
+      }
+
+      const rzp=new window.Razorpay(options)
+      rzp.open()
+
+    } catch (error) {
+      console.log(error)
+      toast.error("Something went wrong while enrolling.")
+    }
+  }
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
 
@@ -64,7 +143,7 @@ function ViewCourse() {
                 <li>✅Lifetime access to course material</li>
               </ul>
 
-              <button className='bg-[black] text-white px-6 py-2 rounded hover:bg-gray-700 mt-8 cursor-pointer'>Enroll Now</button>
+              {!isEnrolled ? <button className='bg-[black] text-white px-6 py-2 rounded hover:bg-gray-700 mt-8 cursor-pointer' onClick={()=>handleEnroll(userData._id,courseId)}>Enroll Now</button> :<button className='bg-green-100 text-green-500 px-6 py-2 rounded hover:bg-gray-700 mt-8 cursor-pointer'>Watch Now</button> }
             </div>
           </div>
         </div>
@@ -136,6 +215,28 @@ function ViewCourse() {
             <textarea className='w-full border border-gray-300 rounded-lg p-2' placeholder='Write your review here...' rows={3}/>
             <button className='bg-black text-white mt-3 px-4 py-2 rounded hover:bg-gray-800'>Submit Review</button>
           </div>
+        </div>
+        
+        {/* for Creator Info */}
+        <div className='flex items-center gap-4 pt-4 border-t'>
+          {creatorData?.photoUrl ?<img src={creatorData?.photoUrl} alt="" className='border-1 border-gray-200 w-16 h-16 rounded-full object-cover' />: <img src={img} alt="" className='border-1 border-gray-200 w-16 h-16 rounded-full object-cover' />}
+          <div>
+            <h2 className='text-lg font-semibold'>{creatorData?.name}</h2>
+            <p className='md:text-sm text-gray-600 text-[10px]'>{creatorData?.description}</p>
+            <p className='md:text-sm text-gray-600 text-[10px]'>{creatorData?.email}</p>
+          </div>
+        </div>
+
+        <div>
+          <p className='text-xl font-semibold mb-2'>Other Published Courses by the Educator -</p>
+        </div>
+
+        <div className='w-full transition-all duration-300 py-[20px] flex items-start justify-center lg:justify-start flex-wrap gap-6 lg:px-[80px]'>
+          {
+            creatorCourses?.map((course,index)=>(
+              <Card key={index} thumbnail={course.thumbnail} id={course._id} price={course.price} title={course.title} category={course.category}/>
+            ))
+          }
         </div>
       </div>
     </div>
