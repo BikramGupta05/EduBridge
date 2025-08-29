@@ -25,7 +25,7 @@ import MyEnrolledCourses from './pages/MyEnrolledCourses.jsx'
 import getAllReviews from './customHooks/getAllReviews.js'
 import SearchWithAi from './pages/SearchWithAi.jsx'
 
-export const serverUrl="http://localhost:8000"
+export const serverUrl="https://edubridge-m3gx.onrender.com"
 
 function App() {
   getCurrentUser()
