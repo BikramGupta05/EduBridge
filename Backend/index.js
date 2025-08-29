@@ -23,7 +23,7 @@ app.use(cookieParser())
 
 //** Cors package which stabilize conaction between backend and frontend */
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:"https://edubridge-1-ocmm.onrender.com",
     credentials:true
 }))
 //** */
